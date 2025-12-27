@@ -11,30 +11,24 @@ def set_seed(seed=42):
     """Set random seeds for reproducibility."""
     '''What problem this solves
 
-RL is stochastic by nature:
-
-random actions
-
-random sampling from replay buffer
-
-random weight initialization
-
-GPU nondeterminism
-
-Without fixing seeds:
-
-You can’t debug, compare runs, or trust results.'''
+        RL is stochastic by nature:
+            random actions
+            random sampling from replay buffer
+            random weight initialization
+            GPU nondeterminism
+            Without fixing seeds:
+            You can’t debug, compare runs, or trust results.
+            
+    '''
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     """
         Fixes randomness in:
 
-        Python
-
-        NumPy
-
-        PyTorch (CPU)
+            Python
+            NumPy
+            PyTorch (CPU)
     """
     
     if torch.cuda.is_available():
@@ -62,15 +56,16 @@ def load_config(config_path="configs/config.yaml"):
 def create_directories():
     """Create necessary directories if they don't exist"""
     dirs = [
-        'data/raw',
-        'data/processed',
-        'data/splits',
-        'models/checkpoints',
-        'results/training_curves',
-        'results/backtest_results',
-        'results/logs'
+        '../data/raw',
+        '../data/processed',
+        '../data/splits',
+        '../models/checkpoints',
+        '../results/training_curves',
+        '../results/backtest_results',
+        '../results/logs'
     ]
     for dir_path in dirs:
+        print(dir_path)
         Path(dir_path).mkdir(parents=True, exist_ok=True)    
         
 def save_model(model,path,episode,optimizer=True):

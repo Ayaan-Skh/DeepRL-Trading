@@ -87,7 +87,7 @@ DeepTrade/
 
 - [x] Day 1: RL Theory
 - [x] Day 2: Project Setup
-- [ ] Day 3: Data Collection
+- [x] Day 3: Data Collection
 - [ ] Day 4-5: Environment Implementation
 - [ ] Day 6-7: DQN Agent
 - [ ] Day 8-14: Training & Debugging
