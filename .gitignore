@@ -39,3 +39,5 @@ Thumbs.db
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !models/checkpoints/.gitkeep
+
+logs/
