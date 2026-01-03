@@ -17,7 +17,7 @@ def test_environment():
     env=TradingEnvironment(
         data=data,
         initial_balance=100000,
-        transction_cost_pct=0.001,
+        transaction_cost_pct=0.001,
         shares_per_trade=10
         )
     print("\n" + "="*50)

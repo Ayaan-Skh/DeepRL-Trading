@@ -5,7 +5,7 @@ import seaborn as sns
 sns.set_style("darkgrid")
 plt.rcParams['figure.figsize']=(15,10)
 
-df=pd.read_csv("../data/processed/reliance_processed.csv")
+df=pd.read_csv("data/processed/reliance_processed.csv")
 df['Date']=pd.to_datetime(df['Date']) # Convert 'Date' column to datetime
 
 #  Create subplots

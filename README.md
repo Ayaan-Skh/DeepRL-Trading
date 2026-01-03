@@ -30,7 +30,7 @@ Build a reinforcement learning agent that learns to trade stocks by:
 - [x] Experience Replay
 - [x] Target Network
 - [x] Double DQN
-- [ ] Dueling DQN (Week 3)
+- [x] Dueling DQN (Week 3)
 - [ ] Prioritized Replay (Week 3)
 
 ## 🚀 Quick Start
@@ -88,7 +88,7 @@ DeepTrade/
 - [x] Day 1: RL Theory
 - [x] Day 2: Project Setup
 - [x] Day 3: Data Collection
-- [ ] Day 4-5: Environment Implementation
+- [x] Day 4-5: Environment Implementation
 - [ ] Day 6-7: DQN Agent
 - [ ] Day 8-14: Training & Debugging
 - [ ] Day 15-21: Evaluation & Polish
@@ -98,7 +98,7 @@ DeepTrade/
 - [DQN Paper](https://arxiv.org/abs/1312.5602)
 - [Double DQN Paper](https://arxiv.org/abs/1509.06461)
 - Sutton & Barto: Reinforcement Learning
-
+x
 ## 👤 Author
 
 [Your Name]

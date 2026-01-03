@@ -16,7 +16,7 @@ class TradingEnvironment(gym.Env):
     def __init__(self,
                  data,
                  initial_balance=100000,
-                 transction_cost_pct=0.001,
+                 transaction_cost_pct=0.001,
                  shares_per_trade=10):
         """
         Initialize the trading environment
@@ -35,7 +35,7 @@ class TradingEnvironment(gym.Env):
         
         # Trading parameters
         self.initial_balance=initial_balance
-        self.transction_cost_pct=transction_cost_pct
+        self.transaction_cost_pct=transaction_cost_pct
         self.shares_per_trade=shares_per_trade
         
         self.action_space=spaces.Discrete(3) # 0:Hold,1:Buy,2:Sell
@@ -219,7 +219,7 @@ class TradingEnvironment(gym.Env):
         total_cost=shares_to_buy*current_price
         logging.info(f"Attempting to buy {shares_to_buy} shares at price:{current_price} with total cost:{total_cost}")
         
-        transction_fee=total_cost*self.transction_cost_pct
+        transction_fee=total_cost*self.transaction_cost_pct
         total_cost_with_fee=transction_fee+total_cost
         
         # Check if we can afford it
@@ -257,7 +257,7 @@ class TradingEnvironment(gym.Env):
             total_proceeds=shares_to_sell*current_price
 
             # Substract transction fees from process
-            transction_fee=self.transction_cost_pct*total_proceeds           
+            transction_fee=self.transaction_cost_pct*total_proceeds           
             total_proceeds_after_fee=total_proceeds-transction_fee
             logging.info(f"Selling {shares_to_sell} shares at price:{ current_price}, total proceeds after fee:{total_proceeds_after_fee}")
             
