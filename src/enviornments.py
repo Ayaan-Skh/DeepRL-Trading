@@ -2,7 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import pandas as pd
 import numpy as np
-from src.logger import logging
+# from src.logger import logging
 
 class TradingEnvironment(gym.Env):
     """
@@ -16,7 +16,7 @@ class TradingEnvironment(gym.Env):
     def __init__(self,
                  data,
                  initial_balance=100000,
-                 transaction_cost_pct=0.001,
+                 transaction_cost_pct=0.0001,
                  shares_per_trade=10):
         """
         Initialize the trading environment
@@ -28,7 +28,6 @@ class TradingEnvironment(gym.Env):
             shares_per_trade: How many shares to buy/sell per action
         """
         super(TradingEnvironment, self).__init__()
-        
         # Store data
         self.data=data.reset_index(drop=True)
         self.max_steps=len(data)-1
@@ -40,6 +39,8 @@ class TradingEnvironment(gym.Env):
         
         self.action_space=spaces.Discrete(3) # 0:Hold,1:Buy,2:Sell
 
+        print(f"Environment initialized: balance={self.initial_balance}, "
+      f"shares_per_trade={self.shares_per_trade}")
         # Define observation Space (state space)
         # 13 continuous values: Open, High, Low, Close, Volume, SMA_20, SMA_50, RSI_14, MACD, MACD_Signal, BB_Upper, BB_Middle, BB_Lower
         self.observation_space=spaces.Box(
@@ -68,15 +69,45 @@ class TradingEnvironment(gym.Env):
             Sets random seed for reproducibility (if provided).
         """
         super().reset(seed=seed)    
-        logging.info(f"Enviornment reset with seed:{seed}")
+        # logging.info(f"Enviornment reset with seed:{seed}")
         self.current_step=0
         self.balance=self.initial_balance
         self.shares_held=0
         self.portfolio_value=self.initial_balance
         self.portfolio_history=[self.initial_balance]
+        
+        print(f"Reset: balance={self.balance}, shares={self.shares_held}")
+
         return self._get_observations(), {}
         
+    def _normalize_state(self, state):
+        """`
+        Normalize state features to prevent exploding Q-values
         
+        Each feature scaled to roughly [-1, 1] or [0, 1] range
+        """
+        normalized = state.copy()
+        
+        # Price features (divide by typical price ~2000)
+        normalized[0] = state[0] / 2000.0       # current_price
+        normalized[1] = state[1] / 10.0         # price_change_pct (already %)
+        normalized[2] = state[2] / 2000.0       # sma_20
+        normalized[3] = state[3] / 2000.0       # sma_50
+        
+        # Technical indicators (already in reasonable ranges, just scale)
+        normalized[4] = state[4] / 100.0        # rsi (0-100 → 0-1)
+        normalized[5] = state[5] / 50.0         # macd (typically -50 to 50)
+        normalized[6] = state[6] / 50.0         # macd_signal
+        # normalized[7] already 0-1              # bb_percent
+        
+        # Portfolio features (divide by initial balance ~100000)
+        normalized[8] = state[8] / 100000.0     # balance
+        normalized[9] = state[9] / 100.0        # shares_held (typically 0-100)
+        normalized[10] = state[10] / 100000.0   # portfolio_value
+        # normalized[11] already 0-1             # shares_value_pct
+        # normalized[12] already 0-1             # can_buy
+        
+        return normalized  
         
     def _get_observations(self):
         """
@@ -85,27 +116,27 @@ class TradingEnvironment(gym.Env):
         Returns:
             state: numpy array of 13 features
         """
-        logging.info(f"Getting observations at step:{self.current_step}")
+        # logging.info(f"Getting observations at step:{self.current_step}")
         # Get current row of data    
         row= self.data.iloc[self.current_step]
         
         # Extract price features 
         current_price=row['Close']
         price_change=row['Price_Change_Pct']    
-        logging.info(f"Extracted price features: current_price={current_price}, price_change={price_change}")
+        # logging.info(f"Extracted price features: current_price={current_price}, price_change={price_change}")
         # Extract technical indicators
         sma_20=row['SMA_20']
         sma_50=row['SMA_50']
         rsi=row['RSI_14']
         macd=row['MACD']
         macd_signal=row['MACD_Signal']
-        logging.info(f"Extracted technical indicators: SMA_20={sma_20}, SMA_50={sma_50}, RSI_14={rsi}, MACD={macd}, MACD_Signal={macd_signal}")
+        # logging.info(f"Extracted technical indicators: SMA_20={sma_20}, SMA_50={sma_50}, RSI_14={rsi}, MACD={macd}, MACD_Signal={macd_signal}")
         
         # Extract Bollinger band positions 
         bb_upper=row['BB_Upper']
         bb_lower=row['BB_Lower']
         bb_middle=row['BB_Middle']
-        logging.info(f"Extracted Bollinger Bands: BB_Upper={bb_upper}, BB_Lower={bb_lower}, BB_Middle={bb_middle}")
+        # logging.info(f"Extracted Bollinger Bands: BB_Upper={bb_upper}, BB_Lower={bb_lower}, BB_Middle={bb_middle}")
         # Normalize to 0-1 range
         if bb_upper != bb_lower:
             bb_percent=(current_price-bb_lower)/(bb_upper-bb_lower)   
@@ -120,7 +151,10 @@ class TradingEnvironment(gym.Env):
         
         # Can we afford to buy?
         can_buy = 1.0 if self.balance >= current_price * self.shares_per_trade else 0.0
-        
+        # In _get_observation(), add:
+        if self.current_step < 5:
+            print(f"Step {self.current_step}: balance={self.balance:.0f}, "
+                f"shares={self.shares_held}, can_buy={can_buy}")
         
         # Construct state vector
         state = np.array([
@@ -139,7 +173,7 @@ class TradingEnvironment(gym.Env):
             can_buy
         ], dtype=np.float32)
         
-        
+        state=self._normalize_state(state)
         return state
     
     def step(self, action):
@@ -183,6 +217,9 @@ class TradingEnvironment(gym.Env):
         
         # Calculate the portfolio value
         self.portfolio_value=self.balance+shares_value
+        if self.portfolio_value < self.initial_balance * 0.1:  # Lost 90%
+            done = True
+            reward = -1.0 
         
         # Append the calculated value to history
         self.portfolio_history.append(self.portfolio_value)    
@@ -217,7 +254,6 @@ class TradingEnvironment(gym.Env):
         """    
         shares_to_buy=self.shares_per_trade
         total_cost=shares_to_buy*current_price
-        logging.info(f"Attempting to buy {shares_to_buy} shares at price:{current_price} with total cost:{total_cost}")
         
         transction_fee=total_cost*self.transaction_cost_pct
         total_cost_with_fee=transction_fee+total_cost
@@ -226,6 +262,8 @@ class TradingEnvironment(gym.Env):
         if self.balance >= total_cost_with_fee:
             self.balance -= total_cost_with_fee
             self.shares_held += shares_to_buy
+        else:
+            return
         
     def _execute_sell(self,current_price):
         # Execute a sell action by liquidating shares at the current market price.
@@ -249,8 +287,11 @@ class TradingEnvironment(gym.Env):
         
         :current_price: current price 
         """    
+        if self.shares_held==0:
+            return
         # Calculate shares to sell
         shares_to_sell=min(self.shares_per_trade,self.shares_held)
+
         if shares_to_sell>0:
             
             # Calculate proceeds from the sale
@@ -259,51 +300,40 @@ class TradingEnvironment(gym.Env):
             # Substract transction fees from process
             transction_fee=self.transaction_cost_pct*total_proceeds           
             total_proceeds_after_fee=total_proceeds-transction_fee
-            logging.info(f"Selling {shares_to_sell} shares at price:{ current_price}, total proceeds after fee:{total_proceeds_after_fee}")
+            # logging.info(f"Selling {shares_to_sell} shares at price:{ current_price}, total proceeds after fee:{total_proceeds_after_fee}")
             
             ## Update portfolio
             self.balance-= total_proceeds_after_fee
             self.shares_held-=shares_to_sell
-            logging.info(f"Updated balance:{self.balance}, shares held:{self.shares_held}")
+            # logging.info(f"Updated balance:{self.balance}, shares held:{self.shares_held}")
             
             # Updates:
             # Add cash to balance
             # Remove shares from holdings
             # If no shares to sell, action is ignored
         
-    def _calculate_reward(self,prev_portfolio_value):
+    def _calculate_reward(self, prev_portfolio_value):
         """
-         Calculate reward based on portfolio performance
-        
-        Args:
-            prev_portfolio_value: Portfolio value before action
-            
-        Returns:
-            reward: Scalar reward value
+        Calculate reward based on portfolio performance
+        Scaled appropriately for step-by-step learning
         """
-        if prev_portfolio_value>0:
-            portfolio_value=((self.portfolio_value-prev_portfolio_value)/prev_portfolio_value)
-            logging.info(f"Calculated reward:{portfolio_value}")
+    # Portfolio return (percentage change)
+        if prev_portfolio_value > 0:
+            return (
+                (self.portfolio_value - prev_portfolio_value) 
+                / prev_portfolio_value
+            )
         else:
-            portfolio_value=0.0
+            return 0
         
-        # Calculate volitility penelty over last 20 steps
-        if len(self.portfolio_history)>20:
-            recent_values=self.portfolio_history[-20:]
-            returns=np.diff(recent_values)/recent_values[:-1]
-            volitility=np.std(returns)
-            logging.info(f"Calculated volitility penelty: {volitility}")
-        else:
-            volitility=0.0
-            
-        risk_penalty=0.5
-        reward=portfolio_value-risk_penalty*volitility
-        logging.info(f"Final reward with penalty{risk_penalty*volitility} is:{reward}")    
-        return reward
-        # Interpretation:
-        #     Made 2% return
-        #     But with 1.5% volatility (risky)
-        #     Net reward = 1.25% (decent!)
+        # Simple reward: just the return
+        # Don't scale by 100 - that was too much!
+        # reward = portfolio_return
+        
+        # return reward    # Interpretation:
+            #     Made 2% return
+            #     But with 1.5% volatility (risky)
+            #     Net reward = 1.25% (decent!)
         
              
         

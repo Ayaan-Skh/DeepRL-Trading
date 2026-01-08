@@ -89,8 +89,8 @@ DeepTrade/
 - [x] Day 2: Project Setup
 - [x] Day 3: Data Collection
 - [x] Day 4-5: Environment Implementation
-- [ ] Day 6-7: DQN Agent
-- [ ] Day 8-14: Training & Debugging
+- [x] Day 6-7: DQN Agent
+- [x] Day 8-14: Training & Debugging
 - [ ] Day 15-21: Evaluation & Polish
 
 ## 📚 References
@@ -101,7 +101,7 @@ DeepTrade/
 x
 ## 👤 Author
 
-[Your Name]
+Ayaan Shaikh
 - LinkedIn: [https://www.linkedin.com/in/ayaan-skh/]
 - GitHub: [https://github.com/Ayaan-Skh]
 

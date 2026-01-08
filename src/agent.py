@@ -123,7 +123,7 @@ class DQNAgent:
             next_state: Next state
             done: Is episode finished ??
         """    
-        self.replay_buffer.append(state,action,reward,next_state,done)
+        self.replay_buffer.append((state,action,reward,next_state,done))
     
     # STEP 4: Training
     def train(self):
@@ -149,6 +149,10 @@ class DQNAgent:
         
         # Compute current Q-values
         current_q_values = self.main_network(states)  # Shape: (32, 3)
+        if self.steps_done < 5:
+            print(f"Step {self.steps_done}: Q-values range: "
+            f"[{current_q_values.min().item():.2f}, {current_q_values.max().item():.2f}]")
+
 
         # .unsqueeze() converts [batch_size] to [batch_size,1]
         # .squeeze() converts [batch_size,1] to [batch_size]
@@ -170,7 +174,7 @@ class DQNAgent:
         loss.backward() # Compute new gradients
         
         # Gradient clipping (preventing exploding gradients)
-        torch.utils.clip_grad_norm_(self.main_network.parameters(),max_norm=10)
+        torch.nn.utils.clip_grad_norm_(self.main_network.parameters(),max_norm=1.0)
         self.optimizer.step()  # Update weights
         # zero_grad(): Clear previous gradients (don't accumulate)
         # backward(): Compute ∂loss/∂weight for all weights
