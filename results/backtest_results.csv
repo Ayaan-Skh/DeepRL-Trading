@@ -1,0 +1,5 @@
+Strategy,Total Return (%),Sharpe Ratio,Max Drawdown (%),Win Rate (%),Final Portfolio Value
+Random,-90.96,0.000,-90.96,32.7,"₹90,368"
+Always Hold,0.00,0.000,0.00,0.0,"₹1,000,000"
+Buy-and-Hold,0.21,0.000,-0.19,0.0,"₹1,002,075"
+Trained Agent,3.49,0.000,-3.16,0.0,"₹1,034,912"

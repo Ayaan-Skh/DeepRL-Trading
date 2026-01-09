@@ -75,6 +75,7 @@ class TradingEnvironment(gym.Env):
         self.shares_held=0
         self.portfolio_value=self.initial_balance
         self.portfolio_history=[self.initial_balance]
+        self._last_action=0
         
         print(f"Reset: balance={self.balance}, shares={self.shares_held}")
 
@@ -189,7 +190,7 @@ class TradingEnvironment(gym.Env):
             truncated: DId we run out of time
             info: extra info ()
         """
-        
+        self._last_action=action
         # Get current price
         current_price=self.data.iloc[self.current_step]['Close']
         
@@ -314,18 +315,29 @@ class TradingEnvironment(gym.Env):
         
     def _calculate_reward(self, prev_portfolio_value):
         """
-        Calculate reward based on portfolio performance
-        Scaled appropriately for step-by-step learning
+        Reward function that HEAVILY encourages trading
         """
-    # Portfolio return (percentage change)
+        # Portfolio return
         if prev_portfolio_value > 0:
-            return (
+            portfolio_return = (
                 (self.portfolio_value - prev_portfolio_value) 
                 / prev_portfolio_value
             )
         else:
-            return 0
+            portfolio_return = 0
         
+        # AGGRESSIVE: Only reward if traded
+        if hasattr(self, '_last_action'):
+            if self._last_action == 0:  # HOLD
+                # HOLD gets NO reward, only penalty
+                reward = -0.0001
+            else:  # BUY or SELL
+                # Trading gets portfolio return + small bonus
+                reward = portfolio_return + 0.0001
+        else:
+            reward = portfolio_return
+        
+        return reward
         # Simple reward: just the return
         # Don't scale by 100 - that was too much!
         # reward = portfolio_return

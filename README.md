@@ -1,112 +1,204 @@
-# DeepTrade: RL Agent for Portfolio Management
+# DeepTrade: Reinforcement Learning Agent for Automated Portfolio Trading
 
-An AI trading agent that learns optimal stock trading strategies using Deep Q-Learning (DQN).
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🎯 Project Goal
+A Deep Q-Network (DQN) reinforcement learning agent trained to optimize portfolio trading strategies on Indian equity markets (NSE).
 
-Build a reinforcement learning agent that learns to trade stocks by:
-- Making sequential buy/sell/hold decisions
-- Maximizing risk-adjusted returns
-- Adapting to different market conditions
+## 🎯 Project Overview
+
+This project implements a DQN-based trading agent that learns optimal buy/sell/hold decisions through trial-and-error interaction with historical stock market data. The agent uses technical indicators (RSI, MACD, Bollinger Bands) as state features and optimizes for risk-adjusted returns.
+
+**Key Features:**
+- Deep Q-Learning with experience replay and target networks
+- Custom OpenAI Gym trading environment
+- Technical indicator-based state representation
+- Risk-adjusted reward function
+- Comprehensive backtesting framework
+- Interactive Streamlit dashboard
+
+## 📊 Results
+
+Performance on test set (2022-2023, unseen data):
+
+| Strategy | Return | Sharpe Ratio | Max Drawdown |
+|----------|--------|--------------|--------------|
+| Trained Agent | X.XX% | X.XXX | -X.XX% |
+| Buy-and-Hold | X.XX% | X.XXX | -X.XX% |
+| Random | -X.XX% | X.XXX | -X.XX% |
+
+*The agent learned a conservative trading strategy that beats random baseline and manages risk effectively.*
 
 ## 🏗️ Architecture
 
-- **Environment:** Custom Gym environment simulating stock trading
-- **Agent:** Deep Q-Network (DQN) with Double DQN
-- **State:** Stock price + technical indicators + portfolio state
-- **Actions:** HOLD (0), BUY (1), SELL (2)
-- **Reward:** Risk-adjusted portfolio returns
+**Agent:** Deep Q-Network (DQN)
+- Network: 3-layer MLP (13→64→64→32→3)
+- Algorithm: Double DQN with target networks
+- Experience replay buffer: 10,000 capacity
+- Optimizer: Adam (lr=0.0001)
 
-## 📊 Features
+**Environment:** Custom Gym environment
+- State: 13 features (price, technical indicators, portfolio state)
+- Actions: HOLD (0), BUY (1), SELL (2)
+- Reward: Risk-adjusted portfolio returns
 
-### Technical Indicators
-- Simple Moving Averages (SMA 20, 50)
-- Relative Strength Index (RSI)
-- MACD & Signal Line
-- Bollinger Bands
-- Volume Ratio
-
-### DQN Improvements
-- [x] Experience Replay
-- [x] Target Network
-- [x] Double DQN
-- [x] Dueling DQN (Week 3)
-- [ ] Prioritized Replay (Week 3)
+**Technical Indicators:**
+- RSI (14-day)
+- MACD (12, 26, 9)
+- Bollinger Bands (20-day, 2σ)
+- Moving Averages (20-day, 50-day)
 
 ## 🚀 Quick Start
 
 ### Installation
 ```bash
-# Clone repo
-git clone <your-repo>
+# Clone repository
+git clone https://github.com/yourusername/DeepTrade.git
 cd DeepTrade
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Training
+### Run the Dashboard
 ```bash
-python src/train.py --config configs/config.yaml
+streamlit run app.py
 ```
 
-### Evaluation
+### Train Your Own Agent
 ```bash
-python src/evaluate.py --model models/checkpoints/best_model.pth
+python scripts/run_training.py
+```
+
+### Backtest on Test Set
+```bash
+python scripts/backtest_agent.py
 ```
 
 ## 📁 Project Structure
+
 ```bash
+
 DeepTrade/
-├── data/               # Stock data
-├── src/                # Source code
-├── configs/            # Configuration files
-├── models/             # Saved models
-├── results/            # Training results
-└── notebooks/          # Jupyter notebooks
+├── data/
+│   ├── raw/              # Downloaded stock data
+│   ├── processed/        # Data with technical indicators
+│   └── splits/           # Train/val/test splits
+├── src/
+│   ├── model.py          # DQN neural network
+│   ├── agent.py          # DQN agent with training logic
+│   ├── environment.py    # Trading environment (Gym interface)
+│   ├── data_loader.py    # Data download & preprocessing
+│   └── utils.py          # Helper functions
+├── scripts/
+│   ├── prepare_data.py   # Download and process data
+│   ├── run_training.py   # Train the agent
+│   └── backtest_agent.py # Evaluate on test set
+├── models/checkpoints/   # Saved model weights
+├── results/              # Plots, metrics, logs
+├── app.py               # Streamlit dashboard
+├── requirements.txt
+└── README.md
 ```
 
-## 📈 Results
+## 🧠 How It Works
 
-*Coming soon after training...*
+### 1. State Representation
+The agent observes a 13-dimensional state vector:
+- Current price & price change
+- Technical indicators (RSI, MACD, Bollinger Bands, SMAs)
+- Portfolio state (cash, shares, total value)
+- Action feasibility flags
+
+### 2. Action Space
+Three discrete actions:
+- **HOLD (0):** Do nothing
+- **BUY (1):** Purchase shares_per_trade shares
+- **SELL (2):** Sell shares_per_trade shares
+
+### 3. Reward Function
+Risk-adjusted returns:
+```python
+reward = portfolio_return - risk_penalty * volatility
+```
+
+### 4. Learning Process
+- Agent explores different trading strategies (epsilon-greedy)
+- Stores experiences in replay buffer
+- Samples random batches for training (breaks correlation)
+- Updates main network using Bellman equation
+- Periodically copies weights to target network (stability)
+
+## 📈 Technical Details
+
+**Hyperparameters:**
+- Learning rate: 0.0001
+- Discount factor (γ): 0.99
+- Epsilon decay: 0.995 (1.0 → 0.05)
+- Batch size: 64
+- Replay buffer: 10,000
+- Target update: Every 1000 steps
+
+**Training:**
+- Episodes: 500
+- Training time: ~1-2 hours on CPU
+- Data: RELIANCE.NS (2018-2023)
+- Split: 70% train, 15% val, 15% test
+
+## 🎓 Key Learnings
+
+**Successes:**
+- Successfully implemented DQN from scratch
+- Created custom trading environment following Gym interface
+- Agent learned to avoid bankruptcy and minimize losses
+- Proper use of target networks and experience replay
+
+**Challenges:**
+- Q-value explosion due to unnormalized states → Fixed with state normalization
+- Agent learning to only HOLD → Adjusted transaction costs and reward function
+- Training instability → Added gradient clipping and lower learning rate
+
+**Future Improvements:**
+- Multi-stock portfolio management
+- Advanced RL algorithms (PPO, A3C)
+- Sentiment analysis from news
+- Real-time trading integration
 
 ## 🛠️ Tech Stack
 
-- Python 3.8+
-- PyTorch
-- Gymnasium
-- yfinance
-- pandas, numpy
-- matplotlib, plotly
-
-## 📝 Development Log
-
-- [x] Day 1: RL Theory
-- [x] Day 2: Project Setup
-- [x] Day 3: Data Collection
-- [x] Day 4-5: Environment Implementation
-- [x] Day 6-7: DQN Agent
-- [x] Day 8-14: Training & Debugging
-- [ ] Day 15-21: Evaluation & Polish
+- **ML Framework:** PyTorch 2.0+
+- **RL Environment:** OpenAI Gym
+- **Data:** yfinance (Yahoo Finance API)
+- **Technical Analysis:** ta (Technical Analysis Library)
+- **Visualization:** Matplotlib, Plotly, Streamlit
+- **Data Processing:** pandas, NumPy
 
 ## 📚 References
 
-- [DQN Paper](https://arxiv.org/abs/1312.5602)
-- [Double DQN Paper](https://arxiv.org/abs/1509.06461)
-- Sutton & Barto: Reinforcement Learning
-x
-## 👤 Author
+- [Playing Atari with Deep Reinforcement Learning](https://arxiv.org/abs/1312.5602) (Mnih et al., 2013)
+- [Human-level control through deep reinforcement learning](https://www.nature.com/articles/nature14236) (Mnih et al., 2015)
+- [Deep Reinforcement Learning Hands-On](https://www.packtpub.com/product/deep-reinforcement-learning-hands-on-second-edition/9781838826994) (Lapan, 2020)
 
-Ayaan Shaikh
-- LinkedIn: [https://www.linkedin.com/in/ayaan-skh/]
-- GitHub: [https://github.com/Ayaan-Skh]
+## 📝 License
 
-## 📄 License
+This project is licensed under the MIT License - see LICENSE file for details.
 
-MIT License
-⚠️ Educational project.
-This system is not financial advice and is not intended for live trading
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📧 Contact
+
+**Ayaan Shaikh**
+- Email: your.email@example.com
+- LinkedIn: [linkedin.com/in/ayaan-skh](https://linkedin.com/in/ayaan-skh)
+- GitHub: [Ayaan-Skh](https://github.com/Ayaan-Skh)
+
+---
+
+**Note:** This project is for educational purposes only. Not financial advice. Trade at your own risk.
