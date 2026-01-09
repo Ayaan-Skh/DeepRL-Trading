@@ -38,7 +38,7 @@ Backtesting on held-out test set (2022-2023, 214 trading days):
 
 *Note: Sharpe ratio appears as 0.000 due to low volatility in the test period. 
 Agent maintained stable, positive returns throughout the evaluation period.*
-```
+
 
 *The agent learned a conservative trading strategy that beats random baseline and manages risk effectively.*
 
@@ -207,8 +207,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📧 Contact
 
 **Ayaan Shaikh**
-- Email: your.email@example.com
-- LinkedIn: [linkedin.com/in/ayaan-skh](https://linkedin.com/in/ayaan-skh)
+- Email: ayaanskh23@gmail.com
+- LinkedIn: [Ayaan Shaikh](https://linkedin.com/in/ayaan-skh)
 - GitHub: [Ayaan-Skh](https://github.com/Ayaan-Skh)
 
 ---
